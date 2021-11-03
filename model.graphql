@@ -1,0 +1,442 @@
+# Analyse and simulate local food systems logistics 
+# to stimulate and support collaboration between local actors. 
+
+# TODO : More thinking for scenario and comparison parameters
+# TODO : How to implement a scenario variation (extra schedule flexibility, flow increased by 10%)
+# TODO : Scenario, set wanted usage of each vehicle (call it balance)
+# TODO : how to add palletInformation from gs1
+# TODO : find source info for container standards
+# TODO : vehicule types : see https://docs.graphhopper.com/#section/Map-Data-and-Routing-Profiles/OpenStreetMap
+# TODO : implement "mongoDB" json schema for entities (scenario references other entities, actor is a tag and add shard key based on workspace)
+# TODO : GDP good distribution practice, how to handle the fact that people don't use a fridge to transport cheese for 10min (on flow, maxTime between pickup and delivery)
+"""
+An actor is someone involved in the local food system : producer, seller, transporter, collectivity
+"""
+type Actor implements Identifiable & Classifiable {
+    id: ID
+    key: String
+    name: String
+    type: String
+    category: String
+    tags: [String!]
+}
+
+"""
+A comparison compares scenario (or group of scenarios) between each other
+"""
+type Comparison implements Identifiable & Classifiable  {
+    id: ID
+    key: String
+    name: String
+    scenarios: [[Scenario]]
+    area: Area
+    category: String
+    tags: [String!]
+}
+
+"""
+A scenario lists all flows, tours, vehicules and drivers available for analysis and simulation
+"""
+type Scenario implements Identifiable & Classifiable {
+    id: ID
+    key: String
+    name: String
+    flows: [Flow]
+    tours: [Tour]
+    vehicules: [Vehicle]
+    drivers: [Driver]
+    area: Area
+    timeRange: DateWindow
+    time: Duration
+    length: Float
+    cost: Float
+    optimizedTours: [Tour]
+    category: String
+    tags: [String!]
+    comment: String
+}
+
+"""
+A flow defines a movement of a pack (of products) from one location (source) to another (destination) on a specific schedule
+"""
+type Flow implements Identifiable & Assignable & Classifiable & Goods {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    source: Location
+    destination: Location
+    quantity: Float
+    load: Load!
+    isGeneral: Boolean
+    generalFlow: Flow
+    schedule: Schedule!
+	dimensions: Dimensions
+	weight: Float
+	temperatureRange : TemperatureRange
+	stackable: Boolean
+	protected: Boolean
+	organic: Boolean
+    transportMeans: [TransportMean!]
+    category: String
+    tags: [String!]
+    comment: String
+}
+
+type TransportMean {
+    temperatureRange: TemperatureRange
+    driverSkills: [String!] # fit for cargo velo, ...
+    vehicleFeatures: [String!] # narrow
+    vehiculeType: String
+    maxDuration: Duration
+    loadTime: Duration
+    unloadTime: Duration
+}
+
+"""
+A hub is a place where products are moving out, moving in and/or through
+"""
+type Hub implements Identifiable & Assignable & Classifiable & Location & Spottable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    address: Address
+    location: PointGeometry
+    availabilities: [Availability]
+    category: String
+    tags: [String!]
+}
+
+"""
+A pack is a set of products inside containers. It can be a flow load or a common box of products.
+"""
+type Pack implements Identifiable & Assignable & Classifiable & Load & Goods {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    families: [String!] 
+    # Prepared, Seasoning, Pack, Cereal, Beverage, Fresh fruit, Frozen fruit, Long-life fruit, 
+    # Fresh leafy vegetable, Fresh vegetable, Long-life vegetable, Frozen vegetable, 
+    # Oil, Transformed, Dairy and eggs, Nuts and seeds, Bakery, Sweet, Seafood, Meat and Poultry 
+    # from le chemin des mûres :  # Fruit and Veg, Egg, Cheese, Bread, Meat, Fish, Food bulk, Inedible bulk 
+	loads: [LoadQuantity]
+    dimensions: Dimensions
+    weight: Float
+    temperatureRange: TemperatureRange
+    stackable: Boolean
+    protected: Boolean
+    organic: Boolean
+    category: String
+    tags: [String!]
+}
+
+type LoadQuantity {
+    quantity: Float
+    load: Load
+}
+
+"""
+A product is produced by an actor (producer)
+"""
+type Product implements Identifiable & Assignable & Classifiable & Load & Goods  {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    gtin: String
+    family: String
+    mainProduct: Product
+    container: Container
+    unit: String
+    dimensions: Dimensions
+    netWeight: Float
+    weight: Float
+    temperatureRange: TemperatureRange
+    foldable: Boolean
+	stackable: Boolean
+	protected: Boolean
+	organic: Boolean
+    lifespan: Duration
+    category: String
+    tags: [String!]
+}
+
+"""
+A container wraps or supports products
+"""
+type Container implements Identifiable & Assignable & Classifiable & Load {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    dimensions: Dimensions
+    filledDimensions: Dimensions
+    weight: Float
+    returnable: Boolean
+    category: String
+    tags: [String!]
+}
+
+"""
+A tour is route taken to move/deliver products between stops
+"""
+type Tour implements Identifiable & Assignable & Classifiable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    simulated: Boolean
+    stops: [Location]
+    breaks: [TimeWindow]
+    flows: [Flow]
+    vehicule: Vehicle
+    driver: Driver
+    schedule: Schedule
+    gMapsRouteUrl: String
+    time: Duration
+    length: Float
+    cost: Float
+    co2Emission: Float
+    category: String
+    tags: [String!]
+}
+
+type Vehicle implements Identifiable & Assignable & Classifiable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    hub: Hub
+    driver: Driver
+    type: String
+    speedRate: Float # 0.8 times the avg speed for the given type, https://docs.routific.com/docs/input
+    model: String
+    inServiceSinceYear: Int
+    capacity: VehicleCapacity
+    compartments: [VehicleCompartment!]
+    features: [String!] # pallet truck, difficult terrain
+    schedule: Schedule
+    avgFuelConsumption: Float
+    fuelType: String
+    travelCost: Float
+    timeCost: Float # per hour
+    fixedCost: Float
+    co2Emission: Float
+    category: String
+    tags: [String!]
+}
+
+type VehicleCompartment {
+    features: [String!]
+    capacity: VehicleCapacity
+}
+
+type VehicleCapacity {
+    dimensions: Dimensions
+    weight: Float
+    temperatureRanges: [String!] # All, ambient, frozen, chilled
+}
+
+type Driver implements Identifiable & Assignable & Classifiable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    hub: Hub
+    schedule: Schedule
+    skills: [String]
+    timeCost: Float # per hour
+    category: String
+    tags: [String!]
+}
+
+type Place implements Identifiable & Assignable & Classifiable & Location & Spottable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor    
+    address: Address
+    location: PointGeometry
+    category: String
+    tags: [String!]
+}
+
+type Area implements Identifiable & Assignable & Classifiable & Location {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    location: MultiPointGeometry
+    category: String
+    tags: [String!]
+}
+
+scalar DateTime
+scalar Date
+scalar Time
+scalar Duration
+
+interface Identifiable {
+    id: ID
+    key: String
+    name: String
+}
+
+interface Assignable {
+    actor: Actor
+}
+
+interface Classifiable {
+  category: String
+  tags: [String!]
+}
+
+interface Spottable {
+    address: Address
+    location: PointGeometry
+}
+
+interface Location {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+}
+
+interface Load {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    dimensions: Dimensions
+    weight: Float
+    category: String
+    tags: [String!]
+}
+
+interface Goods{
+	id: ID
+	key: String
+	name: String
+	actor: Actor
+	dimensions: Dimensions
+	weight: Float
+    temperatureRange: TemperatureRange
+    stackable: Boolean
+	protected: Boolean
+	organic: Boolean
+	category: String
+	tags: [String!]
+}
+
+enum FrequencyType {
+    DAILY
+    WEEKLY
+    MONTHLY
+    YEARLY
+}
+
+"""
+A schedule is how often a resource is available
+"""
+type Schedule implements Identifiable & Assignable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    frequency: Frequency
+    availabilities: [Availability] 
+    maxWeekAvailability: Duration
+    maxAvailibilityInARow: Duration
+}
+
+
+type Frequency {
+    type: FrequencyType
+    interval: Int
+    number: Int
+    numberMin: Int
+    numberMax: Int
+}
+
+# see RRule from iCal https://icalendar.org/iCalendar-RFC-5545/3-8-5-3-schedule-rule.html
+type Availability {
+    timeOfDay: [TimeWindow]
+    dayOfWeek:  [String]
+    dayOfMonth: [Int]
+    month: [String]
+    weekOfMonth: [Int]
+}
+
+type TimeWindow {
+    start: Time
+    end: Time
+}
+
+type DateWindow {
+    start: Date
+    end: Date
+}
+
+#TODO how to combine this with schema.org (streetNumber issue)
+type Address {
+    formattedAddress: String
+    streetNumber: String
+    streetAddress: String
+    locality: String
+    postalCode: String
+    country: String
+}
+
+type PointGeometry {
+    coordinates: [Float!]!
+}
+
+type MultiPointGeometry {
+    type: String
+    coordinates: [[Float!]!]!
+}
+
+type Dimensions {
+    length: Float
+    width: Float
+    height: Float
+    volume: Float
+}
+
+type TemperatureRange {
+    min: Int
+    max: Int
+    name: String # Ambient, Chilled, Frozen
+}
+
+schema {
+  mutation: Mutation
+  query: Query
+}
+
+# TODO
+type Query {
+    scenario (key: String): Scenario
+    comparison (key: String): Comparison
+}
+
+# TODO
+type Mutation {
+  simulate (input: ScenarioInput) : Scenario
+  compare (input: ComparisonInput): Comparison
+}
+
+input ScenarioInput {
+    flowIds: [ID]
+    tourIds: [ID]
+    vehiculeIds: [ID]
+    driverIds: [ID]
+    areaId: ID
+}
+
+input ComparisonInput {
+    scenarioIds: [ID]
+}
