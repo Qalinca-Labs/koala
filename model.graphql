@@ -73,7 +73,6 @@ type Flow implements Identifiable & Assignable & Classifiable & Goods {
     schedule: Schedule!
     dimensions: Dimensions
     weight: Float
-    temperatureRange: TemperatureRange
     stackable: Boolean
     protected: Boolean
     organic: Boolean
