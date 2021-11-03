@@ -71,12 +71,12 @@ type Flow implements Identifiable & Assignable & Classifiable & Goods {
     isGeneral: Boolean
     generalFlow: Flow
     schedule: Schedule!
-	dimensions: Dimensions
-	weight: Float
-	temperatureRange : TemperatureRange
-	stackable: Boolean
-	protected: Boolean
-	organic: Boolean
+    dimensions: Dimensions
+    weight: Float
+    temperatureRange: TemperatureRange
+    stackable: Boolean
+    protected: Boolean
+    organic: Boolean
     transportMeans: [TransportMean!]
     category: String
     tags: [String!]
@@ -121,7 +121,7 @@ type Pack implements Identifiable & Assignable & Classifiable & Load & Goods {
     # Fresh leafy vegetable, Fresh vegetable, Long-life vegetable, Frozen vegetable, 
     # Oil, Transformed, Dairy and eggs, Nuts and seeds, Bakery, Sweet, Seafood, Meat and Poultry 
     # from le chemin des mûres :  # Fruit and Veg, Egg, Cheese, Bread, Meat, Fish, Food bulk, Inedible bulk 
-	loads: [LoadQuantity]
+    loads: [LoadQuantity]
     dimensions: Dimensions
     weight: Float
     temperatureRange: TemperatureRange
@@ -155,9 +155,9 @@ type Product implements Identifiable & Assignable & Classifiable & Load & Goods 
     weight: Float
     temperatureRange: TemperatureRange
     foldable: Boolean
-	stackable: Boolean
-	protected: Boolean
-	organic: Boolean
+    stackable: Boolean
+    protected: Boolean
+    organic: Boolean
     lifespan: Duration
     category: String
     tags: [String!]
@@ -317,18 +317,18 @@ interface Load {
 }
 
 interface Goods{
-	id: ID
-	key: String
-	name: String
-	actor: Actor
-	dimensions: Dimensions
-	weight: Float
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    dimensions: Dimensions
+    weight: Float
     temperatureRange: TemperatureRange
     stackable: Boolean
-	protected: Boolean
-	organic: Boolean
-	category: String
-	tags: [String!]
+    protected: Boolean
+    organic: Boolean
+    category: String
+    tags: [String!]
 }
 
 enum FrequencyType {
@@ -413,8 +413,8 @@ type TemperatureRange {
 }
 
 schema {
-  mutation: Mutation
-  query: Query
+    mutation: Mutation
+    query: Query
 }
 
 # TODO
@@ -425,8 +425,8 @@ type Query {
 
 # TODO
 type Mutation {
-  simulate (input: ScenarioInput) : Scenario
-  compare (input: ComparisonInput): Comparison
+    simulate (input: ScenarioInput) : Scenario
+    compare (input: ComparisonInput): Comparison
 }
 
 input ScenarioInput {
