@@ -87,7 +87,7 @@ type TransportMean {
     driverSkills: [String!] # fit for cargo velo, ...
     vehicleFeatures: [String!] # narrow
     vehiculeType: String
-    maxDuration: Duration
+    durationMax: Duration
     loadTime: Duration
     unloadTime: Duration
 }
@@ -110,7 +110,7 @@ type Hub implements Identifiable & Assignable & Classifiable & Location & Spotta
 """
 A pack is a set of products inside containers. It can be a flow load or a common box of products.
 """
-type Pack implements Identifiable & Assignable & Classifiable & Load & Goods {
+type Pack implements Identifiable & Assignable & Classifiable & Measurable & Load & Goods {
     id: ID
     key: String
     name: String
@@ -139,7 +139,7 @@ type LoadQuantity {
 """
 A product is produced by an actor (producer)
 """
-type Product implements Identifiable & Assignable & Classifiable & Load & Goods  {
+type Product implements Identifiable & Assignable & Classifiable & Measurable & Load & Goods  {
     id: ID
     key: String
     name: String
@@ -153,7 +153,6 @@ type Product implements Identifiable & Assignable & Classifiable & Load & Goods 
     netWeight: Float
     weight: Float
     temperatureRange: TemperatureRange
-    foldable: Boolean
     stackable: Boolean
     protected: Boolean
     organic: Boolean
@@ -165,7 +164,7 @@ type Product implements Identifiable & Assignable & Classifiable & Load & Goods 
 """
 A container wraps or supports products
 """
-type Container implements Identifiable & Assignable & Classifiable & Load {
+type Container implements Identifiable & Assignable & Classifiable & Measurable & Load {
     id: ID
     key: String
     name: String
@@ -173,13 +172,15 @@ type Container implements Identifiable & Assignable & Classifiable & Load {
     dimensions: Dimensions
     filledDimensions: Dimensions
     weight: Float
-    returnable: Boolean
+    foldable: Boolean
+    stackable: Boolean
+    protected: Boolean
     category: String
     tags: [String!]
 }
 
 """
-A tour is route taken to move/deliver products between stops
+A tour is a route taken to move/deliver products between stops
 """
 type Tour implements Identifiable & Assignable & Classifiable {
     id: ID
@@ -213,29 +214,48 @@ type Vehicle implements Identifiable & Assignable & Classifiable {
     speedRate: Float # 0.8 times the avg speed for the given type, https://docs.routific.com/docs/input
     model: String
     inServiceSinceYear: Int
-    capacity: VehicleCapacity
+    capacity: CompartmentCapacity
     compartments: [VehicleCompartment!]
-    features: [String!] # pallet truck, difficult terrain
+    features: [CompartmentFeature!] # pallet truck, difficult terrain
     schedule: Schedule
-    avgFuelConsumption: Float
-    fuelType: String
-    travelCost: Float
-    timeCost: Float # per hour
-    fixedCost: Float
-    co2Emission: Float
+    costs: [TravelCost!]
     category: String
     tags: [String!]
 }
 
-type VehicleCompartment {
-    features: [String!]
-    capacity: VehicleCapacity
+# could be an algorithme to calculate the cost with distance, time as variables (written in javascript)
+type TravelCost {
+    resource: String # money, fuel, co2
+    resourceType: String # type of fuel
+    name: String
+    perDistance: Float # km
+    perTime: Float # hours
+    perSingleUse: Float
+    perWeight: Float # kg
+    perVolume: Float # m3 (ou dm3 ??)
 }
 
-type VehicleCapacity {
+# A compartment can chill or freeze (but not both at the same time) 
+type VehicleCompartment {
+    features: [CompartmentFeature!]
+    capacity: CompartmentCapacity
+    costs: [TravelCost!]
+}
+
+type CompartmentCapacity implements Measurable {
     dimensions: Dimensions
     weight: Float
-    temperatureRanges: [String!] # All, ambient, frozen, chilled
+}
+
+type CompartmentFeature implements Featurable {
+    name: String
+    temperatureRange: TemperatureRange
+    features: [CompartmentFeature!]
+}
+
+interface Featurable {
+    name: String
+    features: [Featurable]
 }
 
 type Driver implements Identifiable & Assignable & Classifiable {
@@ -245,8 +265,8 @@ type Driver implements Identifiable & Assignable & Classifiable {
     actor: Actor
     hub: Hub
     schedule: Schedule
-    skills: [String]
-    timeCost: Float # per hour
+    features: [Featurable!]
+    cost: TravelCost
     category: String
     tags: [String!]
 }
@@ -322,12 +342,16 @@ interface Goods{
     actor: Actor
     dimensions: Dimensions
     weight: Float
-    temperatureRange: TemperatureRange
     stackable: Boolean
     protected: Boolean
     organic: Boolean
     category: String
     tags: [String!]
+}
+
+interface Measurable {
+  dimensions: Dimensions
+  weight: Float
 }
 
 enum FrequencyType {
