@@ -8,6 +8,7 @@
 # TODO : vehicule types : see https://docs.graphhopper.com/#section/Map-Data-and-Routing-Profiles/OpenStreetMap
 # TODO : implement "mongoDB" json schema for entities (scenario references other entities, actor is a tag and add shard key based on workspace)
 # TODO : should all costs be /100km (fuel, money, co2) or /km 
+# TODO : can multiple actors share a same hub
 
 """
 An actor is someone involved in the local food system : producer, seller, transporter, collectivity
