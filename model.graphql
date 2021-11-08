@@ -4,11 +4,11 @@
 # TODO : More thinking for scenario and comparison parameters
 # TODO : How to implement a scenario variation (extra schedule flexibility, flow increased by 10%)
 # TODO : Scenario, set wanted usage of each vehicle (call it balance)
-# TODO : how to add palletInformation from gs1
 # TODO : find source info for container standards
 # TODO : vehicule types : see https://docs.graphhopper.com/#section/Map-Data-and-Routing-Profiles/OpenStreetMap
 # TODO : implement "mongoDB" json schema for entities (scenario references other entities, actor is a tag and add shard key based on workspace)
-# TODO : GDP good distribution practice, how to handle the fact that people don't use a fridge to transport cheese for 10min (on flow, maxTime between pickup and delivery)
+# TODO : should all costs be /100km (fuel, money, co2) or /km 
+
 """
 An actor is someone involved in the local food system : producer, seller, transporter, collectivity
 """
@@ -87,6 +87,7 @@ type TransportMean {
     driverSkills: [String!] # fit for cargo velo, ...
     vehicleFeatures: [String!] # narrow
     vehiculeType: String
+    loadSize: String # small, medium, large
     durationMax: Duration
     loadTime: Duration
     unloadTime: Duration
@@ -116,10 +117,6 @@ type Pack implements Identifiable & Assignable & Classifiable & Measurable & Loa
     name: String
     actor: Actor
     families: [String!] 
-    # Prepared, Seasoning, Pack, Cereal, Beverage, Fresh fruit, Frozen fruit, Long-life fruit, 
-    # Fresh leafy vegetable, Fresh vegetable, Long-life vegetable, Frozen vegetable, 
-    # Oil, Transformed, Dairy and eggs, Nuts and seeds, Bakery, Sweet, Seafood, Meat and Poultry 
-    # from le chemin des mûres :  # Fruit and Veg, Egg, Cheese, Bread, Meat, Fish, Food bulk, Inedible bulk 
     loads: [LoadQuantity]
     dimensions: Dimensions
     weight: Float
@@ -182,7 +179,7 @@ type Container implements Identifiable & Assignable & Classifiable & Measurable 
 """
 A tour is a route taken to move/deliver products between stops
 """
-type Tour implements Identifiable & Assignable & Classifiable {
+type Tour implements Identifiable & Assignable & Classifiable & Schedulable {
     id: ID
     key: String
     name: String
@@ -203,7 +200,7 @@ type Tour implements Identifiable & Assignable & Classifiable {
     tags: [String!]
 }
 
-type Vehicle implements Identifiable & Assignable & Classifiable {
+type Vehicle implements Identifiable & Assignable & Classifiable & Schedulable & Accountable  {
     id: ID
     key: String
     name: String
@@ -214,59 +211,52 @@ type Vehicle implements Identifiable & Assignable & Classifiable {
     speedRate: Float # 0.8 times the avg speed for the given type, https://docs.routific.com/docs/input
     model: String
     inServiceSinceYear: Int
-    capacity: CompartmentCapacity
-    compartments: [VehicleCompartment!]
-    features: [CompartmentFeature!] # pallet truck, difficult terrain
+    compartments: [Compartment!]
+    features: [Feature!] # pallet truck, difficult terrain
     schedule: Schedule
-    costs: [TravelCost!]
+    costs: [Cost!]
     category: String
     tags: [String!]
 }
 
 # could be an algorithme to calculate the cost with distance, time as variables (written in javascript)
-type TravelCost {
+type Cost {
+    name: String
     resource: String # money, fuel, co2
     resourceType: String # type of fuel
-    name: String
-    perDistance: Float # km
-    perTime: Float # hours
-    perSingleUse: Float
-    perWeight: Float # kg
-    perVolume: Float # m3 (ou dm3 ??)
+    value: Float
+    unit: String
+    calculation: String # Per distance, Per time, Per fuel volume, Per single use, Per load weight, Per load volume
+    type: String # vehicle, compartment, ...
 }
 
 # A compartment can chill or freeze (but not both at the same time) 
-type VehicleCompartment {
-    features: [CompartmentFeature!]
-    capacity: CompartmentCapacity
-    costs: [TravelCost!]
+type Compartment {
+    features: [Feature!]
+    capacity: Capacity
+    costs: [Cost!]
 }
 
-type CompartmentCapacity implements Measurable {
+type Capacity implements Measurable {
     dimensions: Dimensions
     weight: Float
 }
 
-type CompartmentFeature implements Featurable {
+type Feature {
     name: String
-    temperatureRange: TemperatureRange
-    features: [CompartmentFeature!]
+    range: String
+    features: [Feature!]
 }
 
-interface Featurable {
-    name: String
-    features: [Featurable]
-}
-
-type Driver implements Identifiable & Assignable & Classifiable {
+type Driver implements Identifiable & Assignable & Classifiable & Featurable & Accountable {
     id: ID
     key: String
     name: String
     actor: Actor
     hub: Hub
     schedule: Schedule
-    features: [Featurable!]
-    cost: TravelCost
+    features: [Feature!]
+    costs: [Cost!]
     category: String
     tags: [String!]
 }
@@ -317,6 +307,23 @@ interface Spottable {
     location: PointGeometry
 }
 
+interface Measurable {
+  dimensions: Dimensions
+  weight: Float
+}
+
+interface Schedulable {
+    schedule: Schedule
+}
+
+interface Featurable {
+    features: [Feature!]
+}
+
+interface Accountable {
+    costs: [Cost!]
+}
+
 interface Location {
     id: ID
     key: String
@@ -347,11 +354,6 @@ interface Goods{
     organic: Boolean
     category: String
     tags: [String!]
-}
-
-interface Measurable {
-  dimensions: Dimensions
-  weight: Float
 }
 
 enum FrequencyType {
