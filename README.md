@@ -10,6 +10,10 @@ Koala is [an online spreadsheet](https://docs.google.com/spreadsheets/d/1tjktUMx
 
 *(To implement)* Scenario can be compared (based on cost, time, …). You can see what’s the difference if all the producers would use their car in turn to move all the products or would only use it to move their own car.
 
+## Model
+
+The model can be explored through [Graphql voyager](https://apis.guru/graphql-voyager/). Copy paste the [raw model](https://raw.githubusercontent.com/Qalinca-Labs/koala/main/model.graphql) into `Graphql voyager > Change schema > SDL`
+
 ## Technical documentation *(in design)*
 
 The code behind the spreadsheet (backend code) can be found through the menu `Tools > Script` editor
