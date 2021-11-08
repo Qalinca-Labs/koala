@@ -17,43 +17,9 @@ type Actor implements Identifiable & Classifiable {
     key: String
     name: String
     type: String
+    members: [Actor!] # if the type is a collectivity
     category: String
     tags: [String!]
-}
-
-"""
-A comparison compares scenario (or group of scenarios) between each other
-"""
-type Comparison implements Identifiable & Classifiable  {
-    id: ID
-    key: String
-    name: String
-    scenarios: [[Scenario]]
-    area: Area
-    category: String
-    tags: [String!]
-}
-
-"""
-A scenario lists all flows, tours, vehicules and drivers available for analysis and simulation
-"""
-type Scenario implements Identifiable & Classifiable {
-    id: ID
-    key: String
-    name: String
-    flows: [Flow]
-    tours: [Tour]
-    vehicules: [Vehicle]
-    drivers: [Driver]
-    area: Area
-    timeRange: DateWindow
-    time: Duration
-    length: Float
-    cost: Float
-    optimizedTours: [Tour]
-    category: String
-    tags: [String!]
-    comment: String
 }
 
 """
@@ -63,11 +29,11 @@ type Flow implements Identifiable & Assignable & Classifiable & Goods {
     id: ID
     key: String
     name: String
-    actor: Actor
+    actor: Actor!
     source: Location
     destination: Location
     quantity: Float
-    load: Load!
+    load: Load
     isGeneral: Boolean
     generalFlow: Flow
     schedule: Schedule!
@@ -80,17 +46,6 @@ type Flow implements Identifiable & Assignable & Classifiable & Goods {
     category: String
     tags: [String!]
     comment: String
-}
-
-type TransportMean {
-    temperatureRange: TemperatureRange
-    driverSkills: [String!] # fit for cargo velo, ...
-    vehicleFeatures: [String!] # narrow
-    vehiculeType: String
-    loadSize: String # small, medium, large
-    durationMax: Duration
-    loadTime: Duration
-    unloadTime: Duration
 }
 
 """
@@ -109,6 +64,69 @@ type Hub implements Identifiable & Assignable & Classifiable & Location & Spotta
 }
 
 """
+A vehicle can carry a load. It can be car, a truck, a cargo bike, a horse, ...
+"""
+type Vehicle implements Identifiable & Assignable & Classifiable & Featurable & Schedulable & Accountable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    hub: Hub
+    driver: Driver
+    type: String
+    speedRate: Float # 0.8 times the avg speed for the given type, https://docs.routific.com/docs/input
+    model: String
+    inServiceSinceYear: Int
+    compartments: [Compartment!]
+    features: [Feature!] # pallet truck, difficult terrain
+    driverSkills: [Feature!]
+    schedule: Schedule
+    costs: [Cost!]
+    category: String
+    tags: [String!]
+}
+
+"""
+A driver is someone that can drive a vehicle
+"""
+type Driver implements Identifiable & Assignable & Classifiable & Featurable & Accountable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    hub: Hub
+    schedule: Schedule
+    features: [Feature!]
+    costs: [Cost!]
+    category: String
+    tags: [String!]
+}
+
+"""
+A tour is a route taken to move/deliver products between stops
+"""
+type Tour implements Identifiable & Assignable & Classifiable & Schedulable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    simulated: Boolean
+    stops: [Location]
+    breaks: [TimeWindow]
+    flows: [Flow]
+    vehicule: Vehicle
+    driver: Driver
+    schedule: Schedule
+    gMapsRouteUrl: String
+    time: Duration
+    length: Float
+    cost: Float
+    co2Emission: Float
+    category: String
+    tags: [String!]
+}
+
+"""
 A pack is a set of products inside containers. It can be a flow load or a common box of products.
 """
 type Pack implements Identifiable & Assignable & Classifiable & Measurable & Load & Goods {
@@ -117,7 +135,7 @@ type Pack implements Identifiable & Assignable & Classifiable & Measurable & Loa
     name: String
     actor: Actor
     families: [String!] 
-    loads: [LoadQuantity]
+    loads: [LoadItem!]
     dimensions: Dimensions
     weight: Float
     temperatureRange: TemperatureRange
@@ -128,13 +146,16 @@ type Pack implements Identifiable & Assignable & Classifiable & Measurable & Loa
     tags: [String!]
 }
 
-type LoadQuantity {
+"""
+A load item defines how many products (or container or pack) there are in a load.
+"""
+type LoadItem {
     quantity: Float
     load: Load
 }
 
 """
-A product is produced by an actor (producer)
+A product is produced by an actor (producer). The product is the smallest part of a load.
 """
 type Product implements Identifiable & Assignable & Classifiable & Measurable & Load & Goods  {
     id: ID
@@ -177,90 +198,70 @@ type Container implements Identifiable & Assignable & Classifiable & Measurable 
 }
 
 """
-A tour is a route taken to move/deliver products between stops
+A transport mean defines a way to move the flow load. 
+For instance, this flow can be carried by a fridge truck or by a car with a cooler.
 """
-type Tour implements Identifiable & Assignable & Classifiable & Schedulable {
-    id: ID
-    key: String
-    name: String
-    actor: Actor
-    simulated: Boolean
-    stops: [Location]
-    breaks: [TimeWindow]
-    flows: [Flow]
-    vehicule: Vehicle
-    driver: Driver
-    schedule: Schedule
-    gMapsRouteUrl: String
-    time: Duration
-    length: Float
-    cost: Float
-    co2Emission: Float
-    category: String
-    tags: [String!]
+type TransportMean {
+    driverSkills: [Feature!] # fit for cargo velo, ...
+    vehicleFeatures: [Feature!] # narrow
+    vehiculeType: String
+    loadSize: String # small, medium, large
+    durationMax: Duration
+    loadTime: Duration
+    unloadTime: Duration
 }
 
-type Vehicle implements Identifiable & Assignable & Classifiable & Schedulable & Accountable  {
-    id: ID
-    key: String
-    name: String
-    actor: Actor
-    hub: Hub
-    driver: Driver
-    type: String
-    speedRate: Float # 0.8 times the avg speed for the given type, https://docs.routific.com/docs/input
-    model: String
-    inServiceSinceYear: Int
-    compartments: [Compartment!]
-    features: [Feature!] # pallet truck, difficult terrain
-    schedule: Schedule
-    costs: [Cost!]
-    category: String
-    tags: [String!]
-}
 
-# could be an algorithme to calculate the cost with distance, time as variables (written in javascript)
+"""
+The cost in terms of resources (money, fuel, CO2) of a vehicle, a compartment, a driver ...
+"""
 type Cost {
     name: String
     resource: String # money, fuel, co2
     resourceType: String # type of fuel
     value: Float
     unit: String
+    # could be an algorithme to calculate the cost with distance, time as variables (written in javascript)
     calculation: String # Per distance, Per time, Per fuel volume, Per single use, Per load weight, Per load volume
     type: String # vehicle, compartment, ...
 }
 
-# A compartment can chill or freeze (but not both at the same time) 
-type Compartment {
+"""
+A compartment is a specific space inside the vehicle. 
+It can be a cooler inside a car or a specific place on a truck where to put returnables.
+"""
+type Compartment implements Featurable & Accountable {
     features: [Feature!]
+    driverSkills: [Feature!]
     capacity: Capacity
     costs: [Cost!]
 }
 
+"""
+The capacity is the amount of load a vehicle or a compartment can fit
+"""
 type Capacity implements Measurable {
     dimensions: Dimensions
     weight: Float
 }
 
+
+"""
+A feature is something special a vehicle, a compartment or a driver; and also something that a flow may require.
+For instance, the flow needs a vehicle with the "fridge truck" feature and a driver with the "truck driver license" feature.
+The blue truck has this "fridge truck" feature and Joe has the "truck driver license". 
+So Joe on the blue truck would be a could fit to satisfy the flow transportation.
+"""
 type Feature {
     name: String
-    range: String
+    range: String # Ex: temperature
     features: [Feature!]
 }
 
-type Driver implements Identifiable & Assignable & Classifiable & Featurable & Accountable {
-    id: ID
-    key: String
-    name: String
-    actor: Actor
-    hub: Hub
-    schedule: Schedule
-    features: [Feature!]
-    costs: [Cost!]
-    category: String
-    tags: [String!]
-}
-
+"""
+A place is an important geographic spot (that's not a hub). 
+It can be a service area (where tours stop).
+"""
 type Place implements Identifiable & Assignable & Classifiable & Location & Spottable {
     id: ID
     key: String
@@ -272,6 +273,9 @@ type Place implements Identifiable & Assignable & Classifiable & Location & Spot
     tags: [String!]
 }
 
+"""
+A geographic area logistically important. 
+"""
 type Area implements Identifiable & Assignable & Classifiable & Location {
     id: ID
     key: String
@@ -282,10 +286,154 @@ type Area implements Identifiable & Assignable & Classifiable & Location {
     tags: [String!]
 }
 
+"""
+A comparison compares scenario (or group of scenarios) between each other
+"""
+type Comparison implements Identifiable & Classifiable  {
+    id: ID
+    key: String
+    name: String
+    scenarios: [[Scenario]]
+    area: Area
+    category: String
+    tags: [String!]
+}
+
+"""
+A scenario lists all flows, tours, vehicules and drivers available for analysis and simulation
+"""
+type Scenario implements Identifiable & Classifiable {
+    id: ID
+    key: String
+    name: String
+    flows: [Flow]
+    tours: [Tour]
+    vehicules: [Vehicle]
+    drivers: [Driver]
+    area: Area
+    timeRange: DateWindow
+    time: Duration
+    length: Float
+    cost: Float
+    optimizedTours: [Tour]
+    category: String
+    tags: [String!]
+    comment: String
+}
+
+"""
+A schedule is how often a resource is available
+"""
+type Schedule implements Identifiable & Assignable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    frequency: Frequency
+    availabilities: [Availability] 
+    maxWeekAvailability: Duration
+    maxAvailibilityInARow: Duration
+}
+
+
+"""
+The frequency of a schedule : once a week, twice a month, ...
+"""
+type Frequency {
+    type: FrequencyType
+    interval: Int
+    number: Int
+    numberMin: Int
+    numberMax: Int
+}
+
+
+"""
+Time availibility : only on mondays and tuesdays from 8pm to 5am. 
+"""
+# see RRule from iCal https://icalendar.org/iCalendar-RFC-5545/3-8-5-3-schedule-rule.html
+type Availability {
+    timeOfDay: [TimeWindow]
+    dayOfWeek:  [String]
+    dayOfMonth: [Int]
+    month: [String]
+    weekOfMonth: [Int]
+}
+
+"""
+Time window : from 8pm to 5 am
+"""
+type TimeWindow {
+    start: Time
+    end: Time
+}
+
+"""
+Date window :  from 14-10-2020 to 23-04-2021 
+"""
+type DateWindow {
+    start: Date
+    end: Date
+}
+
+"""
+The address of a hub or a place
+"""
+#TODO how to combine this with schema.org (streetNumber issue)
+type Address {
+    formattedAddress: String
+    streetNumber: String
+    streetAddress: String
+    locality: String
+    postalCode: String
+    country: String
+}
+
+"""
+Geographic coordinates of point (geojson)
+"""
+type PointGeometry {
+    coordinates: [Float!]!
+}
+
+"""
+Geographic coordinates of a area or lign (geojson)
+"""
+type MultiPointGeometry {
+    type: String
+    coordinates: [[Float!]!]!
+}
+
+"""
+Space dimensions
+"""
+type Dimensions {
+    length: Float
+    width: Float
+    height: Float
+    volume: Float
+}
+
+"""
+The temperature range: 4 to 10°C or frozen
+"""
+type TemperatureRange {
+    min: Int
+    max: Int
+    name: String # Ambient, Chilled, Frozen
+}
+
 scalar DateTime
 scalar Date
 scalar Time
 scalar Duration
+
+enum FrequencyType {
+    DAILY
+    WEEKLY
+    MONTHLY
+    YEARLY
+}
 
 interface Identifiable {
     id: ID
@@ -343,98 +491,9 @@ interface Load {
 }
 
 interface Goods{
-    id: ID
-    key: String
-    name: String
-    actor: Actor
-    dimensions: Dimensions
-    weight: Float
     stackable: Boolean
     protected: Boolean
     organic: Boolean
-    category: String
-    tags: [String!]
-}
-
-enum FrequencyType {
-    DAILY
-    WEEKLY
-    MONTHLY
-    YEARLY
-}
-
-"""
-A schedule is how often a resource is available
-"""
-type Schedule implements Identifiable & Assignable {
-    id: ID
-    key: String
-    name: String
-    actor: Actor
-    frequency: Frequency
-    availabilities: [Availability] 
-    maxWeekAvailability: Duration
-    maxAvailibilityInARow: Duration
-}
-
-
-type Frequency {
-    type: FrequencyType
-    interval: Int
-    number: Int
-    numberMin: Int
-    numberMax: Int
-}
-
-# see RRule from iCal https://icalendar.org/iCalendar-RFC-5545/3-8-5-3-schedule-rule.html
-type Availability {
-    timeOfDay: [TimeWindow]
-    dayOfWeek:  [String]
-    dayOfMonth: [Int]
-    month: [String]
-    weekOfMonth: [Int]
-}
-
-type TimeWindow {
-    start: Time
-    end: Time
-}
-
-type DateWindow {
-    start: Date
-    end: Date
-}
-
-#TODO how to combine this with schema.org (streetNumber issue)
-type Address {
-    formattedAddress: String
-    streetNumber: String
-    streetAddress: String
-    locality: String
-    postalCode: String
-    country: String
-}
-
-type PointGeometry {
-    coordinates: [Float!]!
-}
-
-type MultiPointGeometry {
-    type: String
-    coordinates: [[Float!]!]!
-}
-
-type Dimensions {
-    length: Float
-    width: Float
-    height: Float
-    volume: Float
-}
-
-type TemperatureRange {
-    min: Int
-    max: Int
-    name: String # Ambient, Chilled, Frozen
 }
 
 schema {
