@@ -18,7 +18,7 @@ type Actor implements Identifiable & Classifiable {
     id: ID
     key: String
     name: String
-    type: String
+    type: ActorTypes
     members: [Actor!] # if the type is a collectivity
     category: String
     tags: [String!]
@@ -219,13 +219,13 @@ The cost in terms of resources (money, fuel, CO2) of a vehicle, a compartment, a
 """
 type Cost {
     name: String
+    assetType: AssetTypes
     resource: String # money, fuel, co2
     resourceType: String # type of fuel
     value: Float
     unit: String
     # could be an algorithme to calculate the cost with distance, time as variables (written in javascript)
-    calculation: String # Per distance, Per time, Per fuel volume, Per single use, Per load weight, Per load volume
-    type: String # vehicle, compartment, ...
+    calculation: CostCalculations
 }
 
 """
@@ -256,6 +256,7 @@ So Joe on the blue truck would be a could fit to satisfy the flow transportation
 """
 type Feature {
     name: String
+    assetType: AssetTypes
     range: String # Ex: temperature
     features: [Feature!]
 }
@@ -343,7 +344,7 @@ type Schedule implements Identifiable & Assignable {
 The frequency of a schedule : once a week, twice a month, ...
 """
 type Frequency {
-    type: FrequencyType
+    type: FrequencyTypes
     interval: Int
     number: Int
     numberMin: Int
@@ -493,11 +494,35 @@ interface Goods{
 }
 
 
-enum FrequencyType {
-    DAILY
-    WEEKLY
-    MONTHLY
-    YEARLY
+enum FrequencyTypes {
+    Day
+    Week
+    Month
+    Year
+}
+
+enum ActorTypes {
+    Collectivity
+    Producer
+    Seller
+    Transformer
+    Transporter
+}
+
+enum AssetTypes {
+    Compartment
+    Driver
+    Vehicle
+    VehicleAndCompartment
+}
+
+enum CostCalculations {
+    PerDistance
+    PerTime
+    PerFuelVolume
+    PerSingleUse
+    PerLoadWeight
+    PerLoadVolume
 }
 
 schema {
