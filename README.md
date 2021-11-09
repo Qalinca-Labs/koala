@@ -8,7 +8,7 @@ Koala is [an online spreadsheet](https://docs.google.com/spreadsheets/d/1tjktUMx
 
 *(To implement)* Once all the logistic data is defined, you can start making scenarios (select flows,…) and simulate them. The tool (backend script) will for instance solve the multi-vehicle routing problems.
 
-*(To implement)* Scenario can be compared (based on cost, time, …). You can see what’s the difference if all the producers would use their car in turn to move all the products or would only use it to move their own car.
+*(To implement)* Scenario can be compared (based on cost, time, …). You can see what’s the difference if all the producers would use their car in turn to move all the products or would only use it to move their own produce.
 
 ## Model
 
