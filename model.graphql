@@ -9,6 +9,7 @@
 # TODO : implement "mongoDB" json schema for entities (scenario references other entities, actor is a tag and add shard key based on workspace)
 # TODO : should all costs be /100km (fuel, money, co2) or /km 
 # TODO : can multiple actors share a same hub
+# TODO : should tour breaks be an availability ?? (or represent it with unavailable ??)
 
 """
 An actor is someone involved in the local food system : producer, seller, transporter, collectivity
@@ -97,7 +98,7 @@ type Driver implements Identifiable & Assignable & Classifiable & Featurable & A
     actor: Actor
     hub: Hub
     schedule: Schedule
-    features: [Feature!]
+    skills: [Feature!]
     costs: [Cost!]
     category: String
     tags: [String!]
@@ -136,7 +137,7 @@ type Pack implements Identifiable & Assignable & Classifiable & Measurable & Loa
     name: String
     actor: Actor
     families: [String!] 
-    loads: [LoadItem!]
+    items: [PackItem!]
     dimensions: Dimensions
     weight: Float
     temperatureRange: TemperatureRange
@@ -150,7 +151,7 @@ type Pack implements Identifiable & Assignable & Classifiable & Measurable & Loa
 """
 A load item defines how many products (or container or pack) there are in a load.
 """
-type LoadItem {
+type PackItem {
     quantity: Float
     load: Load
 }
@@ -429,13 +430,6 @@ scalar Date
 scalar Time
 scalar Duration
 
-enum FrequencyType {
-    DAILY
-    WEEKLY
-    MONTHLY
-    YEARLY
-}
-
 interface Identifiable {
     id: ID
     key: String
@@ -495,6 +489,14 @@ interface Goods{
     stackable: Boolean
     protected: Boolean
     organic: Boolean
+}
+
+
+enum FrequencyType {
+    DAILY
+    WEEKLY
+    MONTHLY
+    YEARLY
 }
 
 schema {
