@@ -1,4 +1,4 @@
-# [Koala](https://docs.google.com/spreadsheets/d/1tjktUMx26vcGmk0r5E-Esn6EIexSXl6BBZ2JEsAOu_k)
+# [Koala](https://docs.google.com/spreadsheets/d/1tjktUMx26vcGmk0r5E-Esn6EIexSXl6BBZ2JEsAOu_k) (alpha)
 
 Analyse and simulate local food systems logistics to stimulate and support collaboration between local actors. ([check the model](model.graphql))
 
