@@ -284,6 +284,7 @@ type Area implements Identifiable & Assignable & Classifiable & Location {
     name: String
     actor: Actor
     location: MultiPointGeometry
+    parts: [Area!]
     category: String
     tags: [String!]
 }
