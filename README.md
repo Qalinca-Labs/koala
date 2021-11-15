@@ -12,7 +12,7 @@ Koala is [an online spreadsheet](https://docs.google.com/spreadsheets/d/1tjktUMx
 
 ## Model
 
-The model can be explored through [Graphql voyager](https://apis.guru/graphql-voyager/). Copy paste the [raw model](https://raw.githubusercontent.com/Qalinca-Labs/koala/main/model.graphql) into `Graphql voyager > Change schema > SDL`
+The model can be explored through [Graphql voyager](https://apis.guru/graphql-voyager/). Copy paste the [raw model](https://raw.githubusercontent.com/qalincalabs/koala/main/model.graphql) into `Graphql voyager > Change schema > SDL`
 
 ## Technical documentation *(in design)*
 
