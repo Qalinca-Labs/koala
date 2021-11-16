@@ -11,7 +11,6 @@
 # TODO : can multiple actors share a same hub
 # TODO : should tour breaks be an availability ?? (or represent it with unavailable ??)
 # TODO : rename transport conditions
-# TODO : test graphql inspector
 
 """
 An actor is someone involved in the local food system : producer, seller, transporter, collectivity
