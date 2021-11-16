@@ -1,4 +1,4 @@
-# [Koala](https://docs.google.com/spreadsheets/d/1tjktUMx26vcGmk0r5E-Esn6EIexSXl6BBZ2JEsAOu_k) (alpha)
+# [Koala](https://docs.google.com/spreadsheets/d/1tjktUMx26vcGmk0r5E-Esn6EIexSXl6BBZ2JEsAOu_k) (beta)
 
 Analyse and simulate local food systems logistics to stimulate and support collaboration between local actors. ([check the model](model.graphql))
 
@@ -13,6 +13,10 @@ Koala is [an online spreadsheet](https://docs.google.com/spreadsheets/d/1tjktUMx
 ## Model
 
 The model can be explored through [Graphql voyager](https://apis.guru/graphql-voyager/). Copy paste the [raw model](https://raw.githubusercontent.com/qalincalabs/koala/main/model.graphql) into `Graphql voyager > Change schema > SDL`
+
+## Multilingual
+
+You can change the language through the [language property in *Settings*](https://docs.google.com/spreadsheets/d/1tjktUMx26vcGmk0r5E-Esn6EIexSXl6BBZ2JEsAOu_k/edit#gid=1719152079&range=B1) (try *fr* or *en*, *nl* and *de* were not checked). Translation for other languages or improvements can be done in [*I18n*](https://docs.google.com/spreadsheets/d/1tjktUMx26vcGmk0r5E-Esn6EIexSXl6BBZ2JEsAOu_k/edit#gid=268125426)
 
 ## Technical documentation *(in design)*
 
