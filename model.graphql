@@ -11,6 +11,7 @@
 # TODO : can multiple actors share a same hub
 # TODO : should tour breaks be an availability ?? (or represent it with unavailable ??)
 # TODO : rename transport conditions
+# TODO : add numéro d'entreprise et numéro d'établissement (BCE)
 
 """
 An actor is someone involved in the local food system : producer, seller, transporter, collectivity
@@ -93,7 +94,7 @@ type Vehicle implements Identifiable & Assignable & Classifiable & Featurable & 
 """
 A driver is someone that can drive a vehicle
 """
-type Driver implements Identifiable & Assignable & Classifiable & Featurable & Accountable {
+type Driver implements Identifiable & Assignable & Classifiable & Accountable {
     id: ID
     key: String
     name: String
