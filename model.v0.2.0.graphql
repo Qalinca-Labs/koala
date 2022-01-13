@@ -1,0 +1,551 @@
+# Analyse and simulate local food systems logistics 
+# to stimulate and support collaboration between local actors. 
+
+# TODO : More thinking for scenario and comparison parameters
+# TODO : How to implement a scenario variation (extra schedule flexibility, flow increased by 10%)
+# TODO : Scenario, set wanted usage of each vehicle (call it balance)
+# TODO : find source info for container standards
+# TODO : vehicle types : see https://docs.graphhopper.com/#section/Map-Data-and-Routing-Profiles/OpenStreetMap
+# TODO : implement "mongoDB" json schema for entities (scenario references other entities, actor is a tag and add shard key based on workspace)
+# TODO : should all costs be /100km (fuel, money, co2) or /km 
+# TODO : should tour breaks be an availability ?? (or represent it with unavailable ??)
+# TODO : add numéro d'entreprise et numéro d'établissement (BCE)
+# TODO : temperatureRange, should I differentiate transport and storage
+# TODO : add the concept of tour stop ?
+# TODO : should a driver be a worker with the ability to drive ...
+# TODO : what I need to import, are delivery notes (could be deduced from orders or invoices) !!
+
+"""
+An actor is someone involved in the local food system : producer, seller, transporter, collectivity
+"""
+type Actor implements Identifiable & Classifiable {
+    id: ID
+    key: String
+    name: String
+    type: ActorTypes
+    members: [Actor!] # if the type is a collectivity
+    category: String
+    tags: [String!]
+}
+
+"""
+A flow defines a movement of a pack (of products) from one location (source) to another (destination) on a specific schedule
+"""
+type Flow implements Identifiable & Assignable & Classifiable & Measurable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor!
+    source: Location
+    destination: Location
+    partOf: Flow
+    schedule: Schedule!
+    items: [FlowItem!]!
+    dimensions: Dimensions
+    weight: Quantity
+    transports: [TransportProfile!]
+    category: String
+    tags: [String!]
+    comment: String
+}
+
+type FlowItem {
+    product: Product
+    productFamily: ProductFamily
+    productCategory: String
+    quantity: Quantity
+}
+
+"""
+A hub is a place where products are moving out, moving in and/or through
+"""
+type Hub implements Identifiable & Assignable & Classifiable & Location & Spottable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    address: Address
+    location: PointGeometry
+    availabilities: [Availability]
+    vehicles: [Vehicle]
+    drivers: [Driver]
+    category: String
+    tags: [String!]
+}
+
+"""
+A vehicle can carry a load. It can be car, a truck, a cargo bike, a horse, ...
+is a https://schema.org/Vehicle
+"""
+type Vehicle implements Identifiable & Assignable & Classifiable & Featurable & Schedulable & Accountable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    driver: Driver
+    type: String
+    speedRate: Float # 0.8 times the avg speed for the given type, https://docs.routific.com/docs/input
+    model: String
+    inServiceSinceYear: Int
+    capacity: Capacity
+    compartments: [Compartment!]
+    features: [TransportFeature!] # pallet truck, difficult terrain
+    driverSkills: [TransportFeature!]
+    schedule: Schedule
+    costs: [CostProfile!]
+    category: String
+    tags: [String!]
+}
+
+"""
+A driver is someone that can drive a vehicle
+"""
+type Driver implements Identifiable & Assignable & Classifiable & Accountable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    hub: Hub
+    schedule: Schedule
+    skills: [TransportFeature!]
+    costs: [CostProfile!]
+    category: String
+    tags: [String!]
+}
+
+"""
+A tour is a route taken to move/deliver products between stops
+"""
+type Tour implements Identifiable & Assignable & Classifiable & Schedulable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    simulated: Boolean
+    stops: [Location]
+    breaks: [TimeWindow]
+    flows: [Flow]
+    vehicle: Vehicle
+    driver: Driver
+    schedule: Schedule
+    gMapsRouteUrl: String
+    time: Duration
+    length: Float
+    cost: Float
+    co2Emission: Float
+    category: String
+    tags: [String!]
+}
+
+"""
+A product is produced by an actor (producer). The product is the smallest part of a load.
+is a https://schema.org/Product
+"""
+type Product implements Identifiable & Assignable & Classifiable & Measurable & Load  {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    gtin: String
+    family: ProductFamily
+    container: Container
+    unit: String
+    dimensions: Dimensions
+    netWeight: Quantity
+    weight: Quantity
+    features: [TransportFeature!]
+    lifespan: Duration
+    category: String
+    tags: [String!]
+}
+
+"""
+A product family is a group of product that shares the same properties. 
+It can vary by size (same product composition but different containers),
+by flavour, ...
+"""
+type ProductFamily implements Identifiable & Assignable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    products: [Product!]
+    features: [TransportFeature!]
+}
+
+"""
+A load item defines how many products (or container or pack) there are in a load.
+"""
+type ProductUnit implements Unit {
+    code: String
+    name: String
+    actor: Actor
+    product: Product
+    productFamily: ProductFamily
+    productCategory: String
+    container: Container
+    netVolume: Quantity
+    features: [TransportFeature!]
+}
+
+"""
+A container wraps or supports products
+"""
+type Container implements Identifiable & Assignable & Classifiable & Measurable & Load {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    dimensions: Dimensions
+    filledDimensions: Dimensions
+    weight: Quantity
+    features: [TransportFeature!]
+    category: String
+    tags: [String!]
+}
+
+"""
+A transport profile defines a way of transport for the flow. 
+For instance, this flow can be carried by a fridge truck or by a car with a cooler.
+"""
+type TransportProfile {
+    driverTypes: [String]
+    driverSkills: [TransportFeature!] # fit for cargo velo, ...
+    vehicleTypes: [String]
+    vehicleFeatures: [TransportFeature!] # narrow
+    containerTypes: [String]
+    containerFeatures: [TransportFeature!] # go on a cargo bike
+    loadSizeType: String # small, medium, large
+    durationMax: Duration
+    itemsMax: Float
+    loadTime: Duration
+    unloadTime: Duration
+}
+
+"""
+The cost profile in terms of resources (money, fuel, CO2) of a vehicle, a compartment, a driver ...
+"""
+type CostProfile {
+    name: String
+    assetType: AssetTypes
+    resource: String # money, fuel, co2
+    resourceType: String # type of fuel
+    value: Float
+    unit: String
+    # could be an algorithme to calculate the cost with distance, time as variables (written in javascript)
+    calculation: CostCalculations
+}
+
+"""
+A compartment is a specific space inside the vehicle. 
+It can be a cooler inside a car or a specific place on a truck where to put returnables.
+"""
+type Compartment implements Featurable & Accountable {
+    features: [TransportFeature!]
+    driverSkills: [TransportFeature!]
+    capacity: Capacity
+    costs: [CostProfile!]
+}
+
+"""
+The capacity is the amount of load a vehicle or a compartment can fit
+"""
+type Capacity implements Measurable {
+    dimensions: Dimensions
+    weight: Quantity
+}
+
+
+"""
+A transport feature is something special a vehicle, a compartment, a container, a product or a driver has. The transport profile might require some of them.
+For instance, the transport profile needs a vehicle with the "fridge truck" feature and a driver with the "truck driver license" feature.
+The blue truck has this "fridge truck" feature and Joe has the "truck driver license". 
+So Joe on the blue truck would be a could fit to satisfy the flow transportation.
+"""
+type TransportFeature {
+    name: String
+    assetType: AssetTypes
+    range: String # Ex: temperature
+    minValue: Float
+    maxValue: Float
+    unit: SIUnit
+    features: [TransportFeature!]
+}
+
+"""
+A geographic area logistically important. 
+a bit like https://schema.org/AdministrativeArea
+"""
+type Area implements Identifiable & Assignable & Classifiable & Location {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    location: MultiPointGeometry
+    parts: [Area!]
+    category: String
+    tags: [String!]
+}
+
+"""
+A comparison compares scenario (or group of scenarios) between each other
+"""
+type Comparison implements Identifiable & Classifiable  {
+    id: ID
+    key: String
+    name: String
+    scenarios: [[Scenario]]
+    area: Area
+    category: String
+    tags: [String!]
+}
+
+"""
+A scenario lists all flows, tours, vehicles and drivers available for analysis and simulation
+"""
+type Scenario implements Identifiable & Classifiable {
+    id: ID
+    key: String
+    name: String
+    flows: [Flow]
+    tours: [Tour]
+    vehicles: [Vehicle]
+    drivers: [Driver]
+    area: Area
+    timeRange: DateWindow
+    time: Duration
+    length: Float
+    cost: Float
+    optimizedTours: [Tour]
+    category: String
+    tags: [String!]
+    comment: String
+}
+
+"""
+A schedule is how often a resource is available
+a bit like https://schema.org/Schedule
+"""
+type Schedule implements Identifiable & Assignable {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    frequency: Frequency
+    availabilities: [Availability] 
+    maxWeekAvailability: Duration
+    maxAvailibilityInARow: Duration
+}
+
+
+"""
+The frequency of a schedule : once a week, twice a month, ...
+"""
+type Frequency {
+    type: FrequencyTypes
+    interval: Int
+    number: Int
+    numberMin: Int
+    numberMax: Int
+}
+
+
+"""
+Time availibility : only on mondays and tuesdays from 8pm to 5am. 
+"""
+# see RRule from iCal https://icalendar.org/iCalendar-RFC-5545/3-8-5-3-schedule-rule.html
+type Availability {
+    timesOfDay: [TimeWindow]
+    daysOfWeek:  [String]
+    daysOfMonth: [Int]
+    months: [String]
+    weeksOfMonth: [Int]
+}
+
+"""
+Time window : from 8pm to 5 am
+"""
+type TimeWindow {
+    start: Time
+    end: Time
+}
+
+"""
+Date window :  from 14-10-2020 to 23-04-2021 
+"""
+type DateWindow {
+    start: Date
+    end: Date
+}
+
+"""
+The address of a hub or a place
+"""
+#TODO how to combine this with schema.org (streetNumber issue)
+type Address {
+    formattedAddress: String
+    streetNumber: String
+    street: String
+    locality: String
+    postalCode: String
+    country: String
+}
+
+"""
+Geographic coordinates of point (geojson)
+"""
+type PointGeometry {
+    coordinates: [Float!]!
+}
+
+"""
+Geographic coordinates of a area or lign (geojson)
+"""
+type MultiPointGeometry {
+    type: String
+    coordinates: [[Float!]!]!
+}
+
+type Quantity {
+    value: Float
+    unitCode: Unit
+}
+
+type SIUnit implements Unit {
+    code: String
+}
+
+"""
+Space dimensions
+"""
+type Dimensions {
+    length: Quantity
+    width: Quantity
+    height: Quantity
+    volume: Quantity
+}
+
+scalar DateTime
+scalar Date
+scalar Time
+scalar Duration
+
+interface Identifiable {
+    id: ID
+    key: String
+    name: String
+}
+
+interface Assignable {
+    actor: Actor
+}
+
+interface Classifiable {
+  category: String
+  tags: [String!]
+}
+
+interface Spottable {
+    address: Address
+    location: PointGeometry
+}
+
+interface Measurable {
+  dimensions: Dimensions
+  weight: Quantity
+}
+
+interface Schedulable {
+    schedule: Schedule
+}
+
+interface Featurable {
+    features: [TransportFeature!]
+}
+
+interface Accountable {
+    costs: [CostProfile!]
+}
+
+interface Location {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+}
+
+interface Load {
+    id: ID
+    key: String
+    name: String
+    actor: Actor
+    dimensions: Dimensions
+    weight: Quantity
+    features: [TransportFeature!]
+    category: String
+    tags: [String!]
+}
+
+interface Unit {
+    code: String
+}
+
+enum FrequencyTypes {
+    Day
+    Week
+    Month
+    Year
+}
+
+enum ActorTypes {
+    Collectivity
+    Producer
+    Seller
+    Transformer
+    Transporter
+}
+
+enum AssetTypes {
+    Compartment
+    Driver
+    Vehicle
+    VehicleAndCompartment
+}
+
+enum CostCalculations {
+    PerDistance
+    PerTime
+    PerFuelVolume
+    PerSingleUse
+    PerLoadWeight
+    PerLoadVolume
+}
+
+schema {
+    mutation: Mutation
+    query: Query
+}
+
+# TODO
+type Query {
+    scenario (key: String): Scenario
+    comparison (key: String): Comparison
+}
+
+# TODO
+type Mutation {
+    simulate (input: ScenarioInput) : Scenario
+    compare (input: ComparisonInput): Comparison
+}
+
+input ScenarioInput {
+    flowIds: [ID]
+    tourIds: [ID]
+    vehicleIds: [ID]
+    driverIds: [ID]
+    areaId: ID
+}
+
+input ComparisonInput {
+    scenarioIds: [ID]
+}
