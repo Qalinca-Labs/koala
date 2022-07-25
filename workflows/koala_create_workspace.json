@@ -1,0 +1,1248 @@
+{
+  "name": "koala create workspace",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        1480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "removeDuplicates",
+        "compare": "selectedFields",
+        "fieldsToCompare": {
+          "fields": [
+            {
+              "fieldName": "=shippingAddress.place.geo.coordinates[0]"
+            },
+            {
+              "fieldName": "shippingAddress.place.geo.coordinates[1]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Item Lists",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [
+        440,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "Locality",
+              "value": "={{$json[\"shippingAddress\"][\"locality\"]}}"
+            },
+            {
+              "name": "Postcode",
+              "value": "={{$json[\"shippingAddress\"][\"postalCode\"]}}"
+            },
+            {
+              "name": "Street",
+              "value": "={{$json[\"shippingAddress\"][\"street\"].split(',',1)[0]}}"
+            },
+            {
+              "name": "Lng",
+              "value": "={{$json[\"shippingAddress\"][\"place\"][\"geo\"][\"coordinates\"][0]}}"
+            },
+            {
+              "name": "Lat",
+              "value": "={{$json[\"shippingAddress\"][\"place\"][\"geo\"][\"coordinates\"][1]}}"
+            },
+            {
+              "name": "Country",
+              "value": "={{$json[\"shippingAddress\"][\"country\"][\"name\"]}}"
+            },
+            {
+              "name": "Name",
+              "value": "={{$json[\"buyer\"][\"name\"]}} - {{$json[\"shippingAddress\"][\"locality\"]}}"
+            }
+          ],
+          "boolean": [],
+          "number": [
+            {
+              "name": "Street number",
+              "value": "={{$json[\"shippingAddress\"][\"street\"].split(',',2)[1]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        600,
+        620
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "functionCode": "return items[0].json.data.products"
+      },
+      "name": "Products",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        280,
+        980
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "Name",
+              "value": "={{$json[\"name\"]}}"
+            }
+          ],
+          "boolean": [],
+          "number": [
+            {
+              "name": "Weight (kg)",
+              "value": "={{$json[\"weight\"][\"value\"]}}"
+            },
+            {
+              "name": "GTIN",
+              "value": "={{$json[\"gtin\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        440,
+        980
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "boolean": [],
+          "string": [
+            {
+              "name": "Name",
+              "value": "={{$json[\"name\"]}}"
+            },
+            {
+              "name": "Street",
+              "value": "={{$json[\"place\"][\"address\"][\"street\"].split(',',1)[0]}}"
+            },
+            {
+              "name": "Country",
+              "value": "={{$json[\"place\"][\"address\"][\"country\"][\"code\"]}}"
+            },
+            {
+              "name": "Locality",
+              "value": "={{$json[\"place\"][\"address\"][\"locality\"]}}"
+            }
+          ],
+          "number": [
+            {
+              "name": "Street number",
+              "value": "={{$json[\"place\"][\"address\"][\"street\"].split(',',2)[1]}}"
+            },
+            {
+              "name": "Postcode",
+              "value": "={{$json[\"place\"][\"address\"][\"postalCode\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set2",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        440,
+        1160
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "functionCode": "return items[0].json.data.workspaces"
+      },
+      "name": "Workspaces",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        280,
+        1160
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "boolean": [],
+          "string": [
+            {
+              "name": "Name",
+              "value": "={{$json[\"number\"]}}"
+            },
+            {
+              "name": "Source",
+              "value": "={{$json[\"seller\"][\"name\"]}}"
+            },
+            {
+              "name": "Destination",
+              "value": "={{$json[\"buyer\"][\"name\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set3",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        440,
+        440
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "boolean": [],
+          "string": [
+            {
+              "name": "Flow",
+              "value": "={{$json[\"number\"]}}"
+            },
+            {
+              "name": "Product",
+              "value": "={{$json[\"lines\"][\"name\"]}}"
+            }
+          ],
+          "number": [
+            {
+              "name": "Quantity",
+              "value": "={{$json[\"lines\"][\"quantity\"][\"value\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set4",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        600,
+        800
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=lines",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "name": "Item Lists1",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [
+        440,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "boolean": [],
+          "string": [
+            {
+              "name": "Name",
+              "value": "={{$json[\"_id\"]}}"
+            },
+            {
+              "name": "Type",
+              "value": "={{$json[\"type\"]}}"
+            },
+            {
+              "name": "Model",
+              "value": "={{$json[\"model\"][\"name\"]}}"
+            },
+            {
+              "name": "Compartment 1",
+              "value": "={{$json[\"compartments\"][0][\"name\"]}}"
+            },
+            {
+              "name": "Compartment 2",
+              "value": "={{$json[\"compartments\"][1][\"name\"]}}"
+            },
+            {
+              "name": "Compartment 3",
+              "value": "={{$json[\"compartments\"][2][\"name\"]}}"
+            },
+            {
+              "name": "Features",
+              "value": "={{$json[\"features\"][0][\"name\"]}}"
+            },
+            {
+              "name": "Brand",
+              "value": "={{$json[\"brand\"][\"name\"]}}"
+            }
+          ],
+          "number": [
+            {
+              "name": "Fuel consumption (L/100km)",
+              "value": "={{$json[\"costs\"][1][\"value\"]}}"
+            },
+            {
+              "name": "Distance cost (€/km)",
+              "value": "={{$json[\"costs\"][0][\"value\"]/100}}"
+            },
+            {
+              "name": "CO2 emission (g/km)",
+              "value": "={{$json[\"costs\"][2][\"value\"]}}"
+            },
+            {
+              "name": "Volume capacity (m3)",
+              "value": "={{$json[\"capacity\"][\"volume\"][\"value\"]}}"
+            },
+            {
+              "name": "Weight capacity (kg)",
+              "value": "={{$json[\"capacity\"][\"weight\"][\"value\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set5",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        440,
+        1340
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "boolean": [],
+          "string": [
+            {
+              "name": "Name",
+              "value": "={{$json[\"name\"]}}"
+            }
+          ],
+          "number": [
+            {
+              "name": "Weight capacity (kg)",
+              "value": "={{$json[\"capacity\"][\"weight\"][\"value\"]}}"
+            },
+            {
+              "name": "Volume (m3)",
+              "value": "={{$json[\"capacity\"][\"volume\"][\"value\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set6",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        600,
+        1540
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=compartments",
+        "options": {}
+      },
+      "name": "Item Lists2",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [
+        440,
+        1540
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "shipments",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "name": "Item Lists4",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [
+        440,
+        2160
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "shipments",
+        "include": "allOtherFields",
+        "options": {
+          "disableDotNotation": false,
+          "destinationFieldName": ""
+        }
+      },
+      "name": "Split shipments",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [
+        440,
+        1940
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "stops",
+        "include": "allOtherFields",
+        "options": {}
+      },
+      "name": "split stops",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [
+        600,
+        1940
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "boolean": [],
+          "string": [
+            {
+              "name": "Vehicle",
+              "value": "={{$json[\"vehicle\"][\"type\"]}}"
+            },
+            {
+              "name": "Length (km)",
+              "value": "={{$json[\"distance\"][\"value\"]}}"
+            },
+            {
+              "name": "Name",
+              "value": "={{$json[\"name\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set9",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        440,
+        1740
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "boolean": [],
+          "string": [
+            {
+              "name": "Flow",
+              "value": "={{$json[\"shipments\"][\"order\"][\"number\"]}}"
+            },
+            {
+              "name": "Tour",
+              "value": "={{$json[\"name\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set10",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        600,
+        2160
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "functionCode": "return items[0].json.data.tours"
+      },
+      "name": "Tour",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        280,
+        1940
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items[0].json.data.orders"
+      },
+      "name": "Orders",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        280,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "boolean": [],
+          "string": [
+            {
+              "name": "Tour",
+              "value": "={{$json[\"name\"]}}"
+            },
+            {
+              "name": "Location",
+              "value": "={{$json[\"shipments\"][\"delivery\"][\"place\"][\"address\"][\"locality\"]}}"
+            },
+            {
+              "name": "Stop key",
+              "value": "={{$json[\"stops\"][\"place\"]}}"
+            }
+          ],
+          "number": [
+            {
+              "name": "Order",
+              "value": "={{$json[\"stops\"][\"order\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set11",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        760,
+        1940
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "output": "input2"
+      },
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        1400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": "1x8Jzy2YlpJR4ueHY9SjCVoiQC2WojM_MlbOuN0dRvhA",
+        "options": {
+          "name": "={{$json[\"fileName\"]}}",
+          "parents": [
+            "1bQ6sv7R9GUsC1uDecJBiy9dIAr7NK0GX"
+          ]
+        }
+      },
+      "name": "Create file",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        1300
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const workspaceQuery = {\n  _id_in:[\"6268316abf9fc4223292d8b3\"],\n  place: {\n    address: {\n      postalCode_in:[\"6850\", \"1301\"]\n    }\n  }\n}\n\nreturn {\n  query: {\n    orders: { \n      date_gte: new Date(\"2022-05-01\").toISOString(), \n      date_lt: new Date(\"2022-05-14\").toISOString(),\n      seller: {\n        workspace: workspaceQuery\n      }\n    },\n    products: {\n      owner: {\n        workspace: workspaceQuery\n      }\n    },\n    workspaces: workspaceQuery\n  }\n}"
+      },
+      "name": "Query",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        1480
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "endpoint": "https://realm.mongodb.com/api/client/v2.0/app/logcica-pfufx/graphql",
+        "requestFormat": "json",
+        "query": "query getOrderRelationships(\n  $products: ProductQueryInput!\n  $orders: OrderQueryInput!\n  $workspaces: WorkspaceQueryInput!\n) {\n  tours: tours {\n    name\n    vehicle {\n      type\n      name\n    }\n    distance {\n      value\n      unit {\n        symbol\n      }\n    }\n    duration {\n      value\n      unit {\n        symbol\n      }\n    }\n    stops {\n      order\n      place\n    }\n    shipments {\n      delivery {\n        place {\n          address {\n            locality\n          }\n        }\n      }\n      order {\n        number\n      }\n    }\n  }\n\n  vehicles: vehicles {\n    _id\n    brand {\n      name\n    }\n    capacity {\n      volume {\n        unit {\n          symbol\n        }\n        value\n      }\n      weight {\n        unit {\n          symbol\n        }\n        value\n      }\n    }\n    compartments {\n      capacity {\n        volume {\n          unit {\n            symbol\n          }\n          value\n        }\n        weight {\n          unit {\n            symbol\n          }\n          value\n        }\n      }\n      features {\n        key\n        name\n      }\n      name\n    }\n    costs {\n      driver {\n        factor\n        type\n        unit {\n          symbol\n        }\n      }\n      resource {\n        currency {\n          symbol\n        }\n        key\n        type\n        unit {\n          symbol\n        }\n      }\n      unit {\n        symbol\n      }\n      value\n    }\n    features {\n      key\n      name\n    }\n    model {\n      date\n      name\n    }\n    type\n    weight {\n      unit {\n        symbol\n      }\n      value\n    }\n  }\n\n  products: products(query: $products) {\n    gtin\n    name\n    weight {\n      value\n    }\n  }\n\n  workspaces: workspaces(query: $workspaces) {\n    name\n    place {\n      name\n      address {\n        street\n        country {\n          code\n        }\n        postalCode\n        locality\n      }\n    }\n  }\n\n  orders: orders(query: $orders) {\n    number\n    lines {\n      name\n      quantity {\n        value\n      }\n    }\n\n    shippingMethod {\n      type\n    }\n\n    shippingAddress {\n      street\n      postalCode\n      locality\n      country {\n        name\n      }\n\n      place {\n        _id\n        geo {\n          coordinates\n        }\n        address {\n          street\n          postalCode\n        }\n      }\n    }\n    buyer {\n      email\n      name\n      phone\n    }\n    seller {\n      name\n      workspace {\n        _id\n        ids\n        name\n      }\n    }\n    lines {\n      product {\n        _id\n      }\n    }\n  }\n}\n",
+        "variables": "={{JSON.stringify($json[\"query\"])}}"
+      },
+      "name": "Get data",
+      "type": "n8n-nodes-base.graphql",
+      "typeVersion": 1,
+      "position": [
+        -360,
+        1480
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "21",
+          "name": "logCiCa API dev"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return items[0].json.data.vehicles"
+      },
+      "name": "Vehicles",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        280,
+        1340
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items[0].json.data.vehicles.filter((elem) => elem['compartments']!==null)"
+      },
+      "name": "Vehicle compartments",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        280,
+        1540
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{$node[\"Create file\"].json[\"id\"]}}",
+        "range": "Shipm.!A:M",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "name": "Add shipments",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        600,
+        440
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{$node[\"Create file\"].json[\"id\"]}}",
+        "range": "Places!A:M",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "name": "Add places",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        760,
+        620
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{$node[\"Create file\"].json[\"id\"]}}",
+        "range": "Shipm. produ.!A:M",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "name": "Add shipment products",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        760,
+        800
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{$node[\"Create file\"].json[\"id\"]}}",
+        "range": "Produ.!A:V",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "name": "Add products",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        600,
+        980
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{$node[\"Create file\"].json[\"id\"]}}",
+        "range": "Places!A:M",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "name": "Add workspaces",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        600,
+        1160
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "item.fileName = \"Koala Workspace - \" + new Date().toISOString().slice(0,19).replaceAll(\":\",\"-\")\nreturn item;"
+      },
+      "name": "File name",
+      "type": "n8n-nodes-base.functionItem",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        1300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{$node[\"Create file\"].json[\"id\"]}}",
+        "range": "Vehi.!A:AG",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "name": "Add vehicles",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        600,
+        1340
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{$node[\"Create file\"].json[\"id\"]}}",
+        "range": "Vehi. comp.!A:J",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "name": "Add vehicle compartments",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        760,
+        1540
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{$node[\"Create file\"].json[\"id\"]}}",
+        "range": "Tours!A:P",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "name": "Add tours",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        920,
+        1740
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{$node[\"Create file\"].json[\"id\"]}}",
+        "range": "Tour stops!A:P",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "name": "Add tour stops",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        920,
+        1940
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{$node[\"Create file\"].json[\"id\"]}}",
+        "range": "Tour shipm.!A:P",
+        "options": {
+          "valueInputMode": "USER_ENTERED"
+        }
+      },
+      "name": "Add tour shipments",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [
+        920,
+        2160
+      ],
+      "credentials": {
+        "googleApi": {
+          "id": "3",
+          "name": "Digicirco Google"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Item Lists": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Products": {
+      "main": [
+        [
+          {
+            "node": "Set1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workspaces": {
+      "main": [
+        [
+          {
+            "node": "Set2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item Lists1": {
+      "main": [
+        [
+          {
+            "node": "Set4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item Lists2": {
+      "main": [
+        [
+          {
+            "node": "Set6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item Lists4": {
+      "main": [
+        [
+          {
+            "node": "Set10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split shipments": {
+      "main": [
+        [
+          {
+            "node": "split stops",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split stops": {
+      "main": [
+        [
+          {
+            "node": "Set11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tour": {
+      "main": [
+        [
+          {
+            "node": "Set9",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split shipments",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Item Lists4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set2": {
+      "main": [
+        [
+          {
+            "node": "Add workspaces",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "Add places",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set1": {
+      "main": [
+        [
+          {
+            "node": "Add products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set3": {
+      "main": [
+        [
+          {
+            "node": "Add shipments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set4": {
+      "main": [
+        [
+          {
+            "node": "Add shipment products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set5": {
+      "main": [
+        [
+          {
+            "node": "Add vehicles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set6": {
+      "main": [
+        [
+          {
+            "node": "Add vehicle compartments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set9": {
+      "main": [
+        [
+          {
+            "node": "Add tours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set10": {
+      "main": [
+        [
+          {
+            "node": "Add tour shipments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orders": {
+      "main": [
+        [
+          {
+            "node": "Item Lists",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Set3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Item Lists1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set11": {
+      "main": [
+        [
+          {
+            "node": "Add tour stops",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "File name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Orders",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Products",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Workspaces",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Vehicles",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Vehicle compartments",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Tour",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create file": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query": {
+      "main": [
+        [
+          {
+            "node": "Get data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Vehicles": {
+      "main": [
+        [
+          {
+            "node": "Set5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vehicle compartments": {
+      "main": [
+        [
+          {
+            "node": "Item Lists2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File name": {
+      "main": [
+        [
+          {
+            "node": "Create file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": 26,
+  "tags": []
+}
