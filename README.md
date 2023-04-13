@@ -4,7 +4,7 @@ Analyse and simulate local food systems logistics to stimulate and support colla
 
 > **FR** Outil digital d'analyse et de simulation des activités logistiques à destination des acteurs des circuits courts (alimentaires et de proximité) en vue d’identifier les opportunités de collaboration et leurs mises en œuvre.
 
-Koala is [an online spreadsheet](https://docs.google.com/spreadsheets/d/1tjktUMx26vcGmk0r5E-Esn6EIexSXl6BBZ2JEsAOu_k) where you define all the logistic model data (local actors, their product flows, vehicles, drivers and tours). The spreadsheet is like a logistic workspace.
+Koala is an online spreadsheet([showcase](https://docs.google.com/spreadsheets/d/1tjktUMx26vcGmk0r5E-Esn6EIexSXl6BBZ2JEsAOu_k)) where you define all the logistic model data (local actors, their product flows, vehicles, drivers and tours). The spreadsheet is like a logistic workspace.
 
 *(To implement)* Once all the logistic data is defined, you can start making scenarios (select flows,…) and simulate them. The tool (backend script) will for instance solve the multi-vehicle routing problems.
 
